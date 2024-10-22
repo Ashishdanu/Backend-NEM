@@ -1,0 +1,110 @@
+// 1. Most Popular Project: Find the project with the highest budget
+db.projects.aggregate([
+  {
+    $lookup: {
+      from: "departments",
+      localField: "department_id",
+      foreignField: "_id",
+      as: "department"
+    }
+  },
+  {
+    $unwind: "$department"
+  },
+  {
+    $sort: { budget: -1 }
+  },
+  {
+    $group: {
+      _id: "$department.name",
+      totalProjects: { $sum: 1 },
+      highestBudgetProject: { $first: "$$ROOT" }
+    }
+  },
+  {
+    $sort: { highestBudgetProject.budget: -1 }
+  },
+  { $limit: 1 },
+  {
+    $project: {
+      departmentName: "$_id",
+      highestBudgetProject: "$highestBudgetProject.name",
+      highestBudget: "$highestBudgetProject.budget"
+    }
+  }
+]);
+
+// 2. Employees in Engineering Department: List all employees in 'Engineering', sorted by hire date
+db.employees.find({ department: "Engineering" }).sort({ hire_date: 1 });
+
+// 3. Finance Department Projects: List all projects in 'Finance', sorted by budget
+db.projects.find({ department: "Finance" }).sort({ budget: -1 });
+
+// 4. Recent Sales by Finance Employees: List all sales made by employees in 'Finance' since "2023-09-15"
+db.sales.aggregate([
+  {
+    $lookup: {
+      from: "employees",
+      localField: "employee_id",
+      foreignField: "_id",
+      as: "employee"
+    }
+  },
+  {
+    $unwind: "$employee"
+  },
+  {
+    $match: {
+      "employee.department": "Finance",
+      sale_date: { $gte: new Date("2023-09-15") }
+    }
+  },
+  { $sort: { sale_date: 1 } }
+]);
+
+// 5. Project Details for Employee 'John Doe': Find all projects associated with 'John Doe'
+db.projects.aggregate([
+  {
+    $lookup: {
+      from: "employees",
+      localField: "employee_id",
+      foreignField: "_id",
+      as: "employee"
+    }
+  },
+  {
+    $unwind: "$employee"
+  },
+  {
+    $match: { "employee.name": "John Doe" }
+  },
+  {
+    $project: {
+      projectName: "$name",
+      budget: "$budget",
+      departmentName: "$department.name"
+    }
+  }
+]);
+
+// 6. Employees and Their Office Address for 'Payroll Software' Project: List all employees working on 'Payroll Software'
+db.projects.aggregate([
+  { $match: { name: "Payroll Software" } },
+  {
+    $lookup: {
+      from: "employees",
+      localField: "employee_id",
+      foreignField: "_id",
+      as: "employees"
+    }
+  },
+  {
+    $unwind: "$employees"
+  },
+  {
+    $project: {
+      employeeName: "$employees.name",
+      officeAddress: "$employees.office_address"
+    }
+  }
+]);

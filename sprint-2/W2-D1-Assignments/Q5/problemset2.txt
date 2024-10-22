@@ -1,0 +1,56 @@
+// 14. Assess the impact of RAM capacity on laptop prices and ratings.
+// Group laptops by RAM capacity and analyze the average price and rating for each group.
+db.laptops.aggregate([
+  {
+    $group: {
+      _id: "$ram_memory",
+      averagePrice: { $avg: "$Price" },
+      averageRating: { $avg: "$Rating" }
+    }
+  },
+  { $sort: { averagePrice: 1 } }
+]);
+
+// 15. Investigate the price and rating distribution for gaming laptops.
+// Identify which brands are leading in the gaming laptop market.
+db.laptops.aggregate([
+  { $match: { "Model": { $regex: /gaming/i } } }, // Assuming 'gaming' is part of the model name
+  {
+    $group: {
+      _id: "$brand",
+      averagePrice: { $avg: "$Price" },
+      averageRating: { $avg: "$Rating" },
+      averageRAM: { $avg: "$ram_memory" },
+      gpuType: { $first: "$gpu_type" }
+    }
+  },
+  { $sort: { averageRating: -1 } }
+]);
+
+// 16. Analyze the warranty periods offered by different brands.
+// Identify any patterns regarding how warranty periods influence consumer ratings and pricing strategies.
+db.laptops.aggregate([
+  {
+    $group: {
+      _id: "$brand",
+      averagePrice: { $avg: "$Price" },
+      averageRating: { $avg: "$Rating" },
+      averageWarranty: { $avg: "$year_of_warranty" }
+    }
+  },
+  { $sort: { averagePrice: 1 } }
+]);
+
+// 17. Examine the relationship between processor brand and laptop price, rating, and primary storage capacity.
+// Group the laptops by processor brand and compare their average price, rating, and storage statistics.
+db.laptops.aggregate([
+  {
+    $group: {
+      _id: "$processor_brand",
+      averagePrice: { $avg: "$Price" },
+      averageRating: { $avg: "$Rating" },
+      averageStorage: { $avg: "$primary_storage_capacity" }
+    }
+  },
+  { $sort: { averagePrice: 1 } }
+]);
